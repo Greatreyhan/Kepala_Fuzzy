@@ -448,6 +448,16 @@
               <FileType>5</FileType>
               <FilePath>..\Ping_driver.h</FilePath>
             </File>
+            <File>
+              <FileName>Huskylens_driver.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\Huskylens_driver.c</FilePath>
+            </File>
+            <File>
+              <FileName>Huskylens_driver.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\Huskylens_driver.h</FilePath>
+            </File>
           </Files>
         </Group>
         <Group>

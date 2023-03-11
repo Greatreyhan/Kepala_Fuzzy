@@ -22,17 +22,11 @@ Dialog DLL:      TCM.DLL V1.53.0.0
  
 <h2>Project:</h2>
 D:\STM32\New Academy\Kepala_Fuzzy\MDK-ARM\Kepala_Fuzzy.uvprojx
-Project File Date:  03/08/2023
+Project File Date:  03/11/2023
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Kepala_Fuzzy'
-compiling Komunikasi.c...
-..\Komunikasi.h(49): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\Komunikasi.c(167): warning:  #1-D: last line of file ends without a newline
-  }
-..\Komunikasi.c: 2 warnings, 0 errors
 compiling main.c...
 ..\..\Kepala_Fuzzy\Ping_driver.h(23): warning:  #1-D: last line of file ends without a newline
   #endif
@@ -40,11 +34,29 @@ compiling main.c...
   #endif
 ..\..\Kepala_Fuzzy\Komunikasi.h(49): warning:  #1-D: last line of file ends without a newline
   #endif
-../Core/Src/main.c: 3 warnings, 0 errors
+..\..\Kepala_Fuzzy\Huskylens_driver.h(160): warning:  #1-D: last line of file ends without a newline
+  #endif
+../Core/Src/main.c: 4 warnings, 0 errors
+compiling Huskylens_driver.c...
+..\Huskylens_driver.h(160): warning:  #1-D: last line of file ends without a newline
+  #endif
+..\Huskylens_driver.c(38): warning:  #111-D: statement is unreachable
+  	return HUSKY_TIMEOUT;
+..\Huskylens_driver.c(215): warning:  #940-D: missing return statement at end of non-void function "husky_getArrowById" 
+  }
+..\Huskylens_driver.c(194): warning:  #550-D: variable "handler"  was set but never used
+  	huskylens_arrow_t handler;
+..\Huskylens_driver.c(230): warning:  #111-D: statement is unreachable
+  	return HUSKY_TIMEOUT;
+..\Huskylens_driver.c(292): warning:  #111-D: statement is unreachable
+  	return ERROR_DETECTION;
+..\Huskylens_driver.c(307): warning:  #550-D: variable "distance"  was set but never used
+  			double angle, distance;
+..\Huskylens_driver.c: 7 warnings, 0 errors
 linking...
-Program Size: Code=12430 RO-data=458 RW-data=120 ZI-data=2224  
+Program Size: Code=15166 RO-data=458 RW-data=136 ZI-data=2240  
 FromELF: creating hex file...
-"Kepala_Fuzzy\Kepala_Fuzzy.axf" - 0 Error(s), 5 Warning(s).
+"Kepala_Fuzzy\Kepala_Fuzzy.axf" - 0 Error(s), 11 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -68,7 +80,7 @@ Package Vendor: Keil
 
    * Component: ARM::CMSIS:CORE:5.6.0
       Include file:  CMSIS\Core\Include\tz_context.h
-Build Time Elapsed:  00:00:06
+Build Time Elapsed:  00:00:05
 </pre>
 </body>
 </html>

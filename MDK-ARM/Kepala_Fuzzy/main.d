@@ -36,3 +36,6 @@ kepala_fuzzy\main.o: ..\..\Kepala_Fuzzy\DWT_Delay.h
 kepala_fuzzy\main.o: ..\..\Kepala_Fuzzy\Fuzzy.h
 kepala_fuzzy\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 kepala_fuzzy\main.o: ..\..\Kepala_Fuzzy\Komunikasi.h
+kepala_fuzzy\main.o: ..\..\Kepala_Fuzzy\Huskylens_driver.h
+kepala_fuzzy\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
+kepala_fuzzy\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h
