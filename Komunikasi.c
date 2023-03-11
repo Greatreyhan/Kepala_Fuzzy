@@ -61,6 +61,14 @@ bool tx_move_rotasi(uint16_t roll, uint16_t pitch, uint16_t yaw, uint16_t pos_z,
 	else return false;
 }
 
+bool tx_statis(uint16_t pos_x, uint16_t pos_y, uint16_t pos_z){
+	uint8_t statis[] = {0xA5, 0x5A, 0x07, ((pos_x >> 8) & 0xFF),(pos_x & 0xFF),((pos_y >> 8) & 0xFF),(pos_y & 0xFF), ((pos_z >> 8) & 0xFF),(pos_z & 0xFF), 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+	statis[15] = checksum_generator(statis, 16);
+		
+	if(HAL_UART_Transmit(huart, statis, 16, 1) == HAL_OK) return true;
+	else return false;
+}
+
 void rx_start(void){
 	HAL_UART_Receive_DMA(huart,rxbuf, 3);
 }
@@ -77,6 +85,7 @@ void rx_feedback(feedback_t* fed){
 		else if(rxbuf[2] == 0x04) fed->translasi = true;
 		else if(rxbuf[2] == 0x05) fed->rotasi = true;
 		else if(rxbuf[2] == 0x06) fed->req = true;
+		else if(rxbuf[2] == 0x07) fed->statis = true;
 	}
 	HAL_UART_Receive_DMA(huart,rxbuf, 3);
 }
@@ -119,7 +128,7 @@ void rx_get(com_get_t* get){
 				get->time =  rxbuf_get[i+9];
 				get->walkpoint =  rxbuf_get[i+10];
 				HAL_UART_Transmit(huart, txbuf, 3, 1);
-				get->logic = 0x05;
+				get->logic = 0x04;
 			}
 			
 			// Check for Rotasi
@@ -130,7 +139,6 @@ void rx_get(com_get_t* get){
 				get->pos_z = (rxbuf_get[i+9] << 8) | rxbuf_get[i+10];
 				get->time =  rxbuf_get[i+11];
 				get->walkpoint =  rxbuf_get[i+12];
-				get->walkpoint =  rxbuf_get[i+13];
 				uint8_t txbuf[3] = {0xA5, 0x5A, 0x05};
 				HAL_UART_Transmit(huart, txbuf, 3, 1);
 				get->logic = 0x05;
@@ -141,6 +149,16 @@ void rx_get(com_get_t* get){
 				uint8_t txbuf[3] = {0xA5, 0x5A, 0x06};
 				HAL_UART_Transmit(huart, txbuf, 3, 1);
 				get->logic = 0x06;
+			}
+			
+			// Check for Statis
+			else if(rxbuf_get[i+2] == 0x07){
+				uint8_t txbuf[3] = {0xA5, 0x5A, 0x07};
+				get->pos_x = (rxbuf_get[i+3] << 8) | rxbuf_get[i+4];
+				get->pos_y = (rxbuf_get[i+5] << 8) | rxbuf_get[i+6];
+				get->pos_z = (rxbuf_get[i+7] << 8) | rxbuf_get[i+8];
+				HAL_UART_Transmit(huart, txbuf, 3, 1);
+				get->logic = 0x07;
 			}
 			
 		}

@@ -17,6 +17,7 @@ typedef struct{
 	bool translasi;
 	bool rotasi;
 	bool req;
+	bool statis;
 }feedback_t;
 
 typedef struct{
@@ -44,4 +45,5 @@ void rx_start(void);
 void rx_feedback(feedback_t* fed);
 void rx_start_get(void);
 void rx_get(com_get_t* get);
+bool tx_statis(uint16_t pos_x, uint16_t pos_y, uint16_t pos_z);
 #endif

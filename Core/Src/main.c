@@ -25,6 +25,7 @@
 #include "DWT_Delay.h"
 #include "Fuzzy.h"
 #include "Komunikasi.h"
+#include "Huskylens_driver.h"
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -64,8 +65,14 @@ static void MX_I2C2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+//****************************** CONFIG  HUSKYLENS *******************************//
+huskylens_info_t huskAll;
+huskylens_status_t status;
+huskylens_arrow_t arrows;
+huskylens_block_t blocks;
+huskylens_all_byid_t id;
 
-//****************************** COONFIG  PING *******************************//
+//****************************** CONFIG  PING *******************************//
 Ping_t FR;
 Ping_t BR;
 Ping_t FL;
@@ -125,6 +132,12 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
+	//********************** Config For Huskylens *************************/
+	if(husky_setup(&hi2c2) == HUSKY_OK){
+		HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+	}
+	
+	huskAll = husky_getAllArrowBlock();
 	//********************** Config For PING *************************/
 	DWT_Delay_Init();
 	
@@ -155,6 +168,9 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		//************************** READ VALUE PING *********************//
+		blocks = husky_getBlocks();
+		
 		//************************** READ VALUE PING *********************//
 		BBV = ping_read(BB);
 		FRV = ping_read(FR);
