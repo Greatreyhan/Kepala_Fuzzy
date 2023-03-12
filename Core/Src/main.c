@@ -65,6 +65,8 @@ static void MX_I2C2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
+//****************************** CONFIG TEST *******************************//
+
 //****************************** CONFIG  HUSKYLENS *******************************//
 huskylens_info_t huskAll;
 huskylens_status_t status;
@@ -132,12 +134,13 @@ int main(void)
   MX_USART2_UART_Init();
   MX_I2C2_Init();
   /* USER CODE BEGIN 2 */
-	//********************** Config For Huskylens *************************/
-	if(husky_setup(&hi2c2) == HUSKY_OK){
-		HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
-	}
 	
-	huskAll = husky_getAllArrowBlock();
+	//********************** Config For Huskylens *************************/
+//	if(husky_setup(&hi2c2) == HUSKY_OK){
+//		HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+//	}
+//	
+//	huskAll = husky_getAllArrowBlock();
 	//********************** Config For PING *************************/
 	DWT_Delay_Init();
 	
@@ -161,7 +164,7 @@ int main(void)
 	//*********************** FUZZY CONFIG **************************//
 	komunikasi_init(&huart2);
 	rx_start();
-	
+//	tx_statis(90, 0, -90);
   /* USER CODE END 2 */
 
   /* Infinite loop */
@@ -169,51 +172,52 @@ int main(void)
   while (1)
   {
 		//************************** READ VALUE PING *********************//
-		blocks = husky_getBlocks();
+// 
 		
 		//************************** READ VALUE PING *********************//
-		BBV = ping_read(BB);
-		FRV = ping_read(FR);
-		BRV = ping_read(BR);
-		BLV = ping_read(BL);
-		FLV = ping_read(FL);
-		FFV = ping_read(FF);
+//		BBV = ping_read(BB);
+//		FRV = ping_read(FR);
+//		BRV = ping_read(BR);
+//		BLV = ping_read(BL);
+//		FLV = ping_read(FL);
+//		FFV = ping_read(FF);
 		
 		//************************* Filter for PING **********************//
-		if((FRV >= BRV)&&(FRV > 0)) kanan = FRV;
-		else if((FRV <= BRV)&&(BRV > 0)) kanan = BRV;
-		else kanan = 0;
-		
-		if((FLV >= BLV) && (FLV > 0.0)) kiri = FLV;
-		else if((FLV <= BLV) && (BLV > 0.0)) kiri = BLV;
-		else kiri = 0;
-		
-		if(FFV >= 0) depan = FFV;
-		else depan = 0;
-		
-		if(BBV >= 0) belakang = BBV;
-		else belakang = 0;
+//		if((FRV >= BRV)&&(FRV > 0)) kanan = FRV;
+//		else if((FRV <= BRV)&&(BRV > 0)) kanan = BRV;
+//		else kanan = 0;
+//		
+//		if((FLV >= BLV) && (FLV > 0.0)) kiri = FLV;
+//		else if((FLV <= BLV) && (BLV > 0.0)) kiri = BLV;
+//		else kiri = 0;
+//		
+//		if(FFV >= 0) depan = FFV;
+//		else depan = 0;
+//		
+//		if(BBV >= 0) belakang = BBV;
+//		else belakang = 0;
 		
 		//************************* FUZZY CALCULATION *******************//
-		if((STATE_KANAN == 1)&&(kanan > 0.0)){
-			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kanan);
-			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
-			res = fuzzy_defuz(&defuz,&fuz_fic_input);
-		}
-		else if((STATE_KIRI == 1)&&(kiri > 0)){
-			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kiri);
-			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
-			res = fuzzy_defuz(&defuz,&fuz_fic_input);
-		}
+//		if((STATE_KANAN == 1)&&(kanan > 0.0)){
+//			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kanan);
+//			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
+//			res = fuzzy_defuz(&defuz,&fuz_fic_input);
+//		}
+//		else if((STATE_KIRI == 1)&&(kiri > 0)){
+//			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kiri);
+//			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
+//			res = fuzzy_defuz(&defuz,&fuz_fic_input);
+//		}
 		
 		//************************* SEND MESSAGE ***********************//
 		// Wall follower Kanan -> Nilai > 30
-		if((STATE_KANAN == 1) && res > 0.0) tx_move_jalan(res+30, 15, 0, 5);
-		
-		// Wall follower Kiri -> Nilai < 30
-		else if((STATE_KIRI == 1) && res > 0.0) tx_move_jalan(res, 15, 0, 5);
-		
-		else tx_move_jalan(res, 0, 0, 5);
+//		if((STATE_KANAN == 1) && res > 0.0) tx_move_jalan(res+30, 15, 0, 5);
+//		
+//		// Wall follower Kiri -> Nilai < 30
+//		else if((STATE_KIRI == 1) && res > 0.0) tx_move_jalan(res, 15, 0, 5);
+//		
+//		else tx_move_jalan(res, 0, 0, 5);
+		tx_move_jalan(2,-2,2,-2);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */

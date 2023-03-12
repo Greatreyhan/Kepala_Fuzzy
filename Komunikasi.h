@@ -21,29 +21,29 @@ typedef struct{
 }feedback_t;
 
 typedef struct{
-	uint16_t pos_x;
-	uint16_t pos_y;
-	uint16_t pos_z;
-	uint16_t roll;
-	uint16_t pitch;
-	uint16_t yaw;
-	uint8_t time;
-	uint8_t walkpoint;
-	uint8_t mode;
-	uint8_t logic;
-	uint8_t speed;
+	int16_t pos_x;
+	int16_t pos_y;
+	int16_t pos_z;
+	int16_t roll;
+	int16_t pitch;
+	int16_t yaw;
+	int8_t time;
+	int8_t walkpoint;
+	int8_t mode;
+	int8_t logic;
+	int8_t speed;
 }com_get_t;
 
 void komunikasi_init(UART_HandleTypeDef* uart_handler);
 bool tx_ping(void);
 uint8_t checksum_generator(uint8_t* arr, uint8_t size);
 bool tx_move_steady(void);
-bool tx_move_jalan(uint16_t pos_x, uint16_t pos_y, uint16_t pos_z, uint8_t speed);
-bool tx_move_translasi(uint16_t pos_x, uint16_t pos_y, uint16_t pos_z, uint8_t time, uint8_t walkpoint);
-bool tx_move_rotasi(uint16_t roll, uint16_t pitch, uint16_t yaw, uint16_t pos_z, uint8_t time, uint8_t walkpoint, uint8_t mode);
+bool tx_move_jalan(int16_t pos_x, int16_t pos_y, int16_t pos_z, int8_t speed);
+bool tx_move_translasi(int16_t pos_x, int16_t pos_y, int16_t pos_z, int8_t time, int8_t walkpoint);
+bool tx_move_rotasi(int16_t roll, int16_t pitch, int16_t yaw, int16_t pos_z, int8_t time, int8_t walkpoint, int8_t mode);
 void rx_start(void);
 void rx_feedback(feedback_t* fed);
 void rx_start_get(void);
 void rx_get(com_get_t* get);
-bool tx_statis(uint16_t pos_x, uint16_t pos_y, uint16_t pos_z);
+bool tx_statis(int16_t pos_x, int16_t pos_y, int16_t pos_z);
 #endif
