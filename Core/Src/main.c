@@ -30,12 +30,33 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
-#define STATE_KANAN 1
-#define STATE_KIRI 0
+
+// State untuk deteksi Wall
+#define STATE_KANAN 						0x01
+#define STATE_KIRI 							0x02
+
+// State untuk belok
+#define BELOK_KANAN 						0x01
+#define BELOK_KIRI 							0x02
+
+// State untuk mode jalan
+#define MODE_MENDAKI 						0x01
+#define MODE_MELEWATI_KELERENG 	0x02
+#define MODE_MENURUN 						0x03
+#define MODE_MENCARI_KORBAN 		0x04
+
 /* USER CODE END PTD */
 
 /* Private define ------------------------------------------------------------*/
 /* USER CODE BEGIN PD */
+
+// Luas pembacaan diperoleh dari (luas arena - luas robot bagian luar) = 45 - 27.5 = 18
+#define LEBAR_PEMBACAAN 				18.00
+// Panjang ping kaki diperoleh dari pengukuran jarak dari ping ke kaki bagian dalam
+#define PANJANG_PING_KAKI 			9.00
+// Mengetahui Jarak terhadap tembok yang ada di depan (perlu diperhitungkan terkait dengan daerah minimal yang diperlukan untuk melakukan rotasi
+#define BATAS_DEPAN 						9.00
+
 /* USER CODE END PD */
 
 /* Private macro -------------------------------------------------------------*/
@@ -45,7 +66,6 @@
 
 /* Private variables ---------------------------------------------------------*/
 I2C_HandleTypeDef hi2c2;
-
 UART_HandleTypeDef huart2;
 DMA_HandleTypeDef hdma_usart2_rx;
 
@@ -65,7 +85,6 @@ static void MX_I2C2_Init(void);
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-//****************************** CONFIG TEST *******************************//
 
 //****************************** CONFIG  HUSKYLENS *******************************//
 huskylens_info_t huskAll;
@@ -87,6 +106,11 @@ double depan = 0, belakang = 0;
 
 double FRV,BRV,FLV,BLV,FFV,BBV;
 
+uint8_t error_kanan = 0;
+uint8_t error_kiri = 0;
+uint8_t error_depan = 0;
+uint8_t error_belakang = 0;
+
 //***************************** CONFIG FUZZY**********************************//
 Fuzzy_input_t input_fuzzy;
 Fuzzy_output_t output_fuzzy;
@@ -100,6 +124,15 @@ void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	rx_feedback(&feeding);
 }
+
+//****************************** ALGORITMA JALAN *******************************//
+void scp_wall_follower(uint8_t state);
+void scp_belok(uint8_t direction);
+void scp_deteksi_korban(uint8_t id);
+void scp_deteksi_arena(uint8_t id);
+void scp_mode_jalan(uint8_t mode);
+void scp_pengangkatan_korban(void);
+void scp_penurunan_korban(void);
 /* USER CODE END 0 */
 
 /**
@@ -171,53 +204,97 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-		//************************** READ VALUE PING *********************//
-// 
 		
 		//************************** READ VALUE PING *********************//
-//		BBV = ping_read(BB);
-//		FRV = ping_read(FR);
-//		BRV = ping_read(BR);
-//		BLV = ping_read(BL);
-//		FLV = ping_read(FL);
-//		FFV = ping_read(FF);
+		BBV = ping_read(BB);
+		FRV = ping_read(FR);
+		BRV = ping_read(BR);
+		BLV = ping_read(BL);
+		FLV = ping_read(FL);
+		FFV = ping_read(FF);
 		
 		//************************* Filter for PING **********************//
-//		if((FRV >= BRV)&&(FRV > 0)) kanan = FRV;
-//		else if((FRV <= BRV)&&(BRV > 0)) kanan = BRV;
-//		else kanan = 0;
-//		
-//		if((FLV >= BLV) && (FLV > 0.0)) kiri = FLV;
-//		else if((FLV <= BLV) && (BLV > 0.0)) kiri = BLV;
-//		else kiri = 0;
-//		
-//		if(FFV >= 0) depan = FFV;
-//		else depan = 0;
-//		
-//		if(BBV >= 0) belakang = BBV;
-//		else belakang = 0;
+		/*
+		* Filter dimulai dari pemilihan pembacaan sensor dengan nilai tertinggi (dengan syarat dibawah nilai luas pembacaan).
+		* Setelah diperoleh maka nilai dimasukkan ke dalam variabel kiri / kanan
+		* Jika terdapat error pembacaan / tidak memenuhi syarat, maka akan disimpan ke dalam variabel error
+		* Jika Error pembacaan lebih dari 1 kali -> indikasi adanya belokan
+		* Jika ada indikasi error pada kanan / kiri dan nilai pembacaan di depan pendek ( < 17.5) maka akan mengindikasi untuk belok kanan/kiri
+		*/
+		
+		// Mencari Jarak terhadap Wall Kanan / Kiri
+		if((FRV >= BRV) && (FRV > PANJANG_PING_KAKI) && (FRV < LEBAR_PEMBACAAN)){
+			kanan = FRV;
+			error_kanan = 0;
+		}
+		
+		else if((FRV <= BRV) && (BRV > PANJANG_PING_KAKI) && (BRV < LEBAR_PEMBACAAN)){
+			kanan = BRV;
+			error_kanan = 0;
+		}
+		else error_kanan += 1;
+		
+		if((FLV >= BLV) && (FLV > PANJANG_PING_KAKI) && (FLV < LEBAR_PEMBACAAN)){
+			kiri = FLV;
+			error_kiri = 0;
+		}
+		else if((FLV <= BLV) && (BLV > PANJANG_PING_KAKI) && (BLV < LEBAR_PEMBACAAN)){
+			kiri = BLV;
+			error_kiri = 0;
+		}
+		else error_kiri += 1;
+		
+		// Mencari Jarak Terhadap Depan dan Belakang
+		if(FFV >= 0){
+			depan = FFV;
+			error_depan = 0;
+		}
+		else error_depan += 1;
+		
+		if(BBV >= 0){
+			belakang = BBV;
+			error_belakang = 0;
+		}
+		else error_belakang += 1;
+		
+		// Mengetahui Jarak Depan terhadap tembok untuk menentukan arah belok
+		if(depan <= BATAS_DEPAN){
+			
+			// Rotasi "Clock Wise" sebesar 90deg Jika Jarak di depan kurang dari batas dan jarak di kanan melebihi range batas
+			if(error_kanan >= 1){
+				
+			}
+			// Rotasi "Counter Clock Wise" sebesar 90deg Jika Jarak di depan kurang dari batas dan jarak di kanan melebihi range batas
+			else if(error_kanan >= 1){
+				tx_move_rotasi(100, 100, 100, 10, 100, 30, 1);
+				
+				// Delay selama rotasi -> Menyesuaikan parameter rotasi
+				HAL_Delay(1000);
+			}
+		}
 		
 		//************************* FUZZY CALCULATION *******************//
-//		if((STATE_KANAN == 1)&&(kanan > 0.0)){
-//			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kanan);
-//			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
-//			res = fuzzy_defuz(&defuz,&fuz_fic_input);
-//		}
-//		else if((STATE_KIRI == 1)&&(kiri > 0)){
-//			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kiri);
-//			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
-//			res = fuzzy_defuz(&defuz,&fuz_fic_input);
-//		}
+		if((STATE_KANAN == 1)&&(kanan > 0.0)){
+			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kanan);
+			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
+			res = fuzzy_defuz(&defuz,&fuz_fic_input);
+		}
+		else if((STATE_KIRI == 1)&&(kiri > 0)){
+			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kiri);
+			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
+			res = fuzzy_defuz(&defuz,&fuz_fic_input);
+		}
 		
 		//************************* SEND MESSAGE ***********************//
 		// Wall follower Kanan -> Nilai > 30
-//		if((STATE_KANAN == 1) && res > 0.0) tx_move_jalan(res+30, 15, 0, 5);
-//		
-//		// Wall follower Kiri -> Nilai < 30
-//		else if((STATE_KIRI == 1) && res > 0.0) tx_move_jalan(res, 15, 0, 5);
-//		
-//		else tx_move_jalan(res, 0, 0, 5);
-		tx_move_jalan(2,-2,2,-2);
+		if((STATE_KANAN == 1) && res > 0.0) tx_move_jalan(res+30, 15, 0, 5);
+		
+		// Wall follower Kiri -> Nilai < 30
+		else if((STATE_KIRI == 1) && res > 0.0) tx_move_jalan(res, 15, 0, 5);
+		
+		// Menyesuaikan posisi
+		else tx_move_jalan(res, 0, 0, 5);
+		
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -381,6 +458,107 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+
+//***************************************************************************************************/
+//************************************ IMPLEMENTASI ALGORITMA ***************************************/
+
+void scp_wall_follower(uint8_t state){
+	
+	// READ VALUE PING 
+		BBV = ping_read(BB);
+		FRV = ping_read(FR);
+		BRV = ping_read(BR);
+		BLV = ping_read(BL);
+		FLV = ping_read(FL);
+		FFV = ping_read(FF);
+	
+	//************************* Filter for PING **********************//
+		/*
+		* Filter dimulai dari pemilihan pembacaan sensor dengan nilai tertinggi (dengan syarat dibawah nilai luas pembacaan).
+		* Setelah diperoleh maka nilai dimasukkan ke dalam variabel kiri / kanan
+		* Jika terdapat error pembacaan / tidak memenuhi syarat, maka akan disimpan ke dalam variabel error
+		* Jika Error pembacaan lebih dari 1 kali -> indikasi adanya belokan
+		* Jika ada indikasi error pada kanan / kiri dan nilai pembacaan di depan pendek ( < 17.5) maka akan mengindikasi untuk belok kanan/kiri
+		*/
+		
+		// Mencari Jarak terhadap Wall Kanan / Kiri
+		if((FRV >= BRV) && (FRV > PANJANG_PING_KAKI) && (FRV < LEBAR_PEMBACAAN)){
+			kanan = FRV;
+			error_kanan = 0;
+		}
+		
+		else if((FRV <= BRV) && (BRV > PANJANG_PING_KAKI) && (BRV < LEBAR_PEMBACAAN)){
+			kanan = BRV;
+			error_kanan = 0;
+		}
+		else error_kanan += 1;
+		
+		if((FLV >= BLV) && (FLV > PANJANG_PING_KAKI) && (FLV < LEBAR_PEMBACAAN)){
+			kiri = FLV;
+			error_kiri = 0;
+		}
+		else if((FLV <= BLV) && (BLV > PANJANG_PING_KAKI) && (BLV < LEBAR_PEMBACAAN)){
+			kiri = BLV;
+			error_kiri = 0;
+		}
+		else error_kiri += 1;
+		
+		
+		// Mengetahui Jarak Depan terhadap tembok untuk menentukan arah belok
+		if(depan <= BATAS_DEPAN){
+			
+			// Rotasi "Clock Wise" sebesar 90deg Jika Jarak di depan kurang dari batas dan jarak di kanan melebihi range batas
+			if(error_kanan >= 1){
+				scp_belok(BELOK_KANAN);
+				
+			}
+			// Rotasi "Counter Clock Wise" sebesar 90deg Jika Jarak di depan kurang dari batas dan jarak di kanan melebihi range batas
+			else if(error_kanan >= 1){
+				scp_belok(BELOK_KIRI);
+			}
+		}
+		
+		//************************* FUZZY CALCULATION *******************//
+		if((state == 0x01)&&(kanan > 0.0)){
+			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kanan);
+			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
+			res = fuzzy_defuz(&defuz,&fuz_fic_input);
+			tx_move_jalan(res, 15, 0, 5);
+		}
+		else if((state == 0x02)&&(kiri > 0)){
+			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kiri);
+			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
+			res = fuzzy_defuz(&defuz,&fuz_fic_input);
+			tx_move_jalan(res, 15, 0, 5);
+		}
+		
+}
+
+void scp_belok(uint8_t direction){
+		
+		// Rotasi Clock Wise
+		if(direction == 0x01) tx_move_rotasi(100, 100, 100, 10, 100, 30, 1);
+	
+		// Rotasi Counter Clock Wise
+		if(direction == 0x02) tx_move_rotasi(100, 100, 100, 10, 100, 30, 1);
+				
+		// Delay selama rotasi -> Menyesuaikan parameter rotasi
+		HAL_Delay(1000);
+	
+		// Looping untuk membaca Ping bagian depan dan belakang
+		while(true){
+			BBV = ping_read(BB);
+			FFV = ping_read(FF);
+			
+			if( (BBV <= 18)){
+				tx_move_jalan(0, 15, 0, 5);
+				break;
+			}
+		}
+}
+
+//***************************************************************************************************/
+//***************************************************************************************************/
 
 /* USER CODE END 4 */
 
