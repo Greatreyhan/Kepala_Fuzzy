@@ -21,11 +21,43 @@
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
+//*************************** MODE KALKULASI ********************************//
+//#define USE_FUZZY 				
+#define USE_PID						
+//#define USE_PID_FUZZY		
+
+//*************************** ON/OFF MODUL ********************************//
+//#define HUSKY_ON 					
+//#define DYNA_ON 					
+#define PING_ON						
+#define COMMUNICATION_ON	
+
+//*************************** FILE EKSTERNAL ******************************//
+#ifdef PING_ON
 #include "Ping_driver.h"
 #include "DWT_Delay.h"
-#include "Fuzzy.h"
+#endif
+
+#ifdef COMMUNICATION_ON
 #include "Komunikasi.h"
+#endif
+
+#ifdef HUSKY_ON
 #include "Huskylens_driver.h"
+#endif
+
+#ifdef DYNA_ON
+#include "Dynamixel.h"
+#endif
+
+#ifdef USE_FUZZY
+#include "Fuzzy.h"
+#endif
+
+#ifdef USE_PID
+#include "pid.h"
+#endif
+
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -52,8 +84,10 @@
 
 // Luas pembacaan diperoleh dari (luas arena - luas robot bagian luar) = 45 - 27.5 = 18
 #define LEBAR_PEMBACAAN 				18.00
+
 // Panjang ping kaki diperoleh dari pengukuran jarak dari ping ke kaki bagian dalam
 #define PANJANG_PING_KAKI 			9.00
+
 // Mengetahui Jarak terhadap tembok yang ada di depan (perlu diperhitungkan terkait dengan daerah minimal yang diperlukan untuk melakukan rotasi
 #define BATAS_DEPAN 						9.00
 
@@ -87,13 +121,16 @@ static void MX_I2C2_Init(void);
 /* USER CODE BEGIN 0 */
 
 //****************************** CONFIG  HUSKYLENS *******************************//
+#ifdef HUSKY_ON
 huskylens_info_t huskAll;
 huskylens_status_t status;
 huskylens_arrow_t arrows;
 huskylens_block_t blocks;
 huskylens_all_byid_t id;
+#endif
 
 //****************************** CONFIG  PING *******************************//
+#ifdef PING_ON
 Ping_t FR;
 Ping_t BR;
 Ping_t FL;
@@ -110,29 +147,59 @@ uint8_t error_kanan = 0;
 uint8_t error_kiri = 0;
 uint8_t error_depan = 0;
 uint8_t error_belakang = 0;
+#endif
+
+//****************************** CONFIG  DYNAMIXEL *******************************//
+#ifdef DYNA_ON
+dynamixel_t ax;
+#endif
 
 //***************************** CONFIG FUZZY**********************************//
+#ifdef USE_FUZZY
 Fuzzy_input_t input_fuzzy;
 Fuzzy_output_t output_fuzzy;
 Fuzzy_fuzzyfication_t fuz_fic_input;
 Fuzzy_defuz_t defuz;
 double res;	
+#endif
+
+//***************************** CONFIG PID **********************************//
+#ifdef USE_PID
+PID_TypeDef hPID;
+double distance, PID_output, distance_setpoint;
+#endif
 
 //**************************** CONFIG COMMUNICATION ********************************//
+#ifdef COMMUNICATION_ON
 feedback_t feeding;
 void HAL_UART_RxCpltCallback(UART_HandleTypeDef *huart)
 {
 	rx_feedback(&feeding);
 }
-
-//****************************** ALGORITMA JALAN *******************************//
+#endif
+//****************************** PROTOTYPE ALGORITMA JALAN *******************************//
 void scp_wall_follower(uint8_t state);
 void scp_belok(uint8_t direction);
 void scp_deteksi_korban(uint8_t id);
 void scp_deteksi_arena(uint8_t id);
-void scp_mode_jalan(uint8_t mode);
+void scp_mode_jalan(mode_jalan_t mode);
 void scp_pengangkatan_korban(void);
 void scp_penurunan_korban(void);
+
+//****************************** PROTOTYPE ALGORITMA RUANGAN *******************************//
+void kri_home(void);
+void kri_ruangan_1(void);
+void kri_ruangan_2(void);
+void kri_ruangan_3(void);
+void kri_ruangan_4(void);
+void kri_ruangan_5(void);
+void kri_ruangan_6(void);
+void kri_ruangan_7(void);
+void kri_ruangan_8(void);
+void kri_ruangan_9(void);
+void kri_ruangan_10(void);
+void kri_ruangan_11(void);
+void kri_finish(void);
 /* USER CODE END 0 */
 
 /**
@@ -169,12 +236,16 @@ int main(void)
   /* USER CODE BEGIN 2 */
 	
 	//********************** Config For Huskylens *************************/
-//	if(husky_setup(&hi2c2) == HUSKY_OK){
-//		HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
-//	}
-//	
-//	huskAll = husky_getAllArrowBlock();
+	#ifdef HUSKY_ON
+	if(husky_setup(&hi2c2) == HUSKY_OK){
+		HAL_GPIO_TogglePin(GPIOD, GPIO_PIN_12);
+	}
+	
+	huskAll = husky_getAllArrowBlock();
+	#endif
+	
 	//********************** Config For PING *************************/
+	#ifdef PING_ON
 	DWT_Delay_Init();
 	
 	FR.PING_PORT = GPIOA;
@@ -189,112 +260,61 @@ int main(void)
 	FF.PING_PIN = GPIO_PIN_9;
 	BB.PING_PORT = GPIOA;
 	BB.PING_PIN = GPIO_PIN_11;
+	#endif
+	
+	//*********************** DYNAMIXEL CONFIG **************************//
+	#ifdef DYNA_ON
+	dyna_init(&huart2, &ax, 0x11);
+	dyna_set_limit_CW(&ax, 0x0000);
+	dyna_set_limit_CCW(&ax, 0x03FF);
+	dyna_set_torque_enabler(&ax, TORQUE_ON);
+	#endif
 	
 	//*********************** FUZZY CONFIG **************************//
+	#ifdef USE_FUZZY
 	fuzzy_set_membership_input(&input_fuzzy, 15, 20, 25);
 	fuzzy_set_membership_output(&output_fuzzy, 0, 15, 30);
+	#endif
 	
-	//*********************** FUZZY CONFIG **************************//
+	//*********************** PID CONFIG **************************//
+	#ifdef USE_PID
+	distance_setpoint = 10;
+	PID(&hPID, &distance, &PID_output, &distance_setpoint, 2, 1, 1, PID_PROPOTIONAL_ERROR, PID_CONTROL_DIRECTION_FORWARD);
+	PID_SetMode(&hPID, PID_AUTOMATIC_MODE);
+  PID_SetSampleTime(&hPID, 500);
+  PID_SetOutputLimits(&hPID, 0, 30);
+	#endif
+	
+	//*********************** COMMUNICATION CONFIG **************************//
+	#ifdef COMMUNICATION_ON
 	komunikasi_init(&huart2);
 	rx_start();
-//	tx_statis(90, 0, -90);
+	#endif
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		scp_wall_follower(STATE_KANAN);
 		
-		//************************** READ VALUE PING *********************//
-		BBV = ping_read(BB);
-		FRV = ping_read(FR);
-		BRV = ping_read(BR);
-		BLV = ping_read(BL);
-		FLV = ping_read(FL);
-		FFV = ping_read(FF);
+		//************************* HUSKY DETECTION ***********************//
+		#ifdef HUSKY_ON
+		blocks = husky_getBlocks();
+		#endif
 		
-		//************************* Filter for PING **********************//
-		/*
-		* Filter dimulai dari pemilihan pembacaan sensor dengan nilai tertinggi (dengan syarat dibawah nilai luas pembacaan).
-		* Setelah diperoleh maka nilai dimasukkan ke dalam variabel kiri / kanan
-		* Jika terdapat error pembacaan / tidak memenuhi syarat, maka akan disimpan ke dalam variabel error
-		* Jika Error pembacaan lebih dari 1 kali -> indikasi adanya belokan
-		* Jika ada indikasi error pada kanan / kiri dan nilai pembacaan di depan pendek ( < 17.5) maka akan mengindikasi untuk belok kanan/kiri
-		*/
-		
-		// Mencari Jarak terhadap Wall Kanan / Kiri
-		if((FRV >= BRV) && (FRV > PANJANG_PING_KAKI) && (FRV < LEBAR_PEMBACAAN)){
-			kanan = FRV;
-			error_kanan = 0;
-		}
-		
-		else if((FRV <= BRV) && (BRV > PANJANG_PING_KAKI) && (BRV < LEBAR_PEMBACAAN)){
-			kanan = BRV;
-			error_kanan = 0;
-		}
-		else error_kanan += 1;
-		
-		if((FLV >= BLV) && (FLV > PANJANG_PING_KAKI) && (FLV < LEBAR_PEMBACAAN)){
-			kiri = FLV;
-			error_kiri = 0;
-		}
-		else if((FLV <= BLV) && (BLV > PANJANG_PING_KAKI) && (BLV < LEBAR_PEMBACAAN)){
-			kiri = BLV;
-			error_kiri = 0;
-		}
-		else error_kiri += 1;
-		
-		// Mencari Jarak Terhadap Depan dan Belakang
-		if(FFV >= 0){
-			depan = FFV;
-			error_depan = 0;
-		}
-		else error_depan += 1;
-		
-		if(BBV >= 0){
-			belakang = BBV;
-			error_belakang = 0;
-		}
-		else error_belakang += 1;
-		
-		// Mengetahui Jarak Depan terhadap tembok untuk menentukan arah belok
-		if(depan <= BATAS_DEPAN){
+		//************************* DYNAMIXEL ROTATION ***********************//
+		#ifdef DYNA_ON
+		dyna_set_moving_speed(&ax, 0x0300, MOVING_CCW);
+		dyna_set_goal_position(&ax, 0x0000);
+		HAL_Delay(1000);
+		dyna_set_goal_position(&ax, 0x0267);
+		dyna_read_posisition(&ax);
+		HAL_Delay(1000);
+		dyna_set_goal_position(&ax, 0x0000);
+		#endif
 			
-			// Rotasi "Clock Wise" sebesar 90deg Jika Jarak di depan kurang dari batas dan jarak di kanan melebihi range batas
-			if(error_kanan >= 1){
-				
-			}
-			// Rotasi "Counter Clock Wise" sebesar 90deg Jika Jarak di depan kurang dari batas dan jarak di kanan melebihi range batas
-			else if(error_kanan >= 1){
-				tx_move_rotasi(100, 100, 100, 10, 100, 30, 1);
-				
-				// Delay selama rotasi -> Menyesuaikan parameter rotasi
-				HAL_Delay(1000);
-			}
-		}
-		
-		//************************* FUZZY CALCULATION *******************//
-		if((STATE_KANAN == 1)&&(kanan > 0.0)){
-			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kanan);
-			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
-			res = fuzzy_defuz(&defuz,&fuz_fic_input);
-		}
-		else if((STATE_KIRI == 1)&&(kiri > 0)){
-			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kiri);
-			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
-			res = fuzzy_defuz(&defuz,&fuz_fic_input);
-		}
-		
-		//************************* SEND MESSAGE ***********************//
-		// Wall follower Kanan -> Nilai > 30
-		if((STATE_KANAN == 1) && res > 0.0) tx_move_jalan(res+30, 15, 0, 5);
-		
-		// Wall follower Kiri -> Nilai < 30
-		else if((STATE_KIRI == 1) && res > 0.0) tx_move_jalan(res, 15, 0, 5);
-		
-		// Menyesuaikan posisi
-		else tx_move_jalan(res, 0, 0, 5);
-		
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -517,20 +537,42 @@ void scp_wall_follower(uint8_t state){
 				scp_belok(BELOK_KIRI);
 			}
 		}
-		
+		#ifdef USE_FUZZY
 		//************************* FUZZY CALCULATION *******************//
-		if((state == 0x01)&&(kanan > 0.0)){
+		if((state == STATE_KANAN)&&(kanan > 0.0)){
 			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kanan);
 			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
 			res = fuzzy_defuz(&defuz,&fuz_fic_input);
-			tx_move_jalan(res, 15, 0, 5);
+			tx_move_jalan(res, 15, 0, 5, JALAN_NORMAL);
 		}
-		else if((state == 0x02)&&(kiri > 0)){
+		else if((state == STATE_KIRI)&&(kiri > 0)){
 			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kiri);
 			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
 			res = fuzzy_defuz(&defuz,&fuz_fic_input);
-			tx_move_jalan(res, 15, 0, 5);
+			tx_move_jalan(res, 15, 0, 5, JALAN_NORMAL);
 		}
+		#endif
+		
+		#ifdef USE_PID
+		//************************* PID CALCULATION *******************//
+		if((STATE_KANAN == 1)&&(kanan > 0.0)){
+			distance = kanan;
+			PID_Compute(&hPID);
+		}
+		else if((STATE_KIRI == 1)&&(kiri > 0)){
+			distance = kiri;
+			PID_Compute(&hPID);
+		}
+		
+		//************************* SEND MESSAGE ***********************//
+		// Wall follower Kanan -> Nilai > 30
+		if((STATE_KANAN == 1) && PID_output > 0.0) tx_move_jalan(PID_output, 15, 0, 5, JALAN_NORMAL);
+		
+		// Wall follower Kiri -> Nilai < 30
+		else if((STATE_KIRI == 1) && PID_output > 0.0) tx_move_jalan(PID_output, 15, 0, 5, JALAN_NORMAL);
+		
+		else tx_move_jalan(PID_output, 0, 0, 5, JALAN_NORMAL);
+		#endif
 		
 }
 
@@ -551,10 +593,73 @@ void scp_belok(uint8_t direction){
 			FFV = ping_read(FF);
 			
 			if( (BBV <= 18)){
-				tx_move_jalan(0, 15, 0, 5);
+				tx_move_jalan(0, 15, 0, 5, JALAN_NORMAL);
 				break;
 			}
 		}
+}
+#ifdef HUSKY_ON
+#ifdef DYNA_ON
+void scp_deteksi_korban(uint8_t id){
+
+	// Set ke Algoritma color detection
+	status = husky_setAlgorithm(ALGORITHM_COLOR_RECOGNITION);
+	
+	// Set Kecepatan Putaran Dynamixel
+	dyna_set_moving_speed(&ax,0x0200,MOVING_CW);
+
+	// Memutar sepanjang 300 derajat -> 5 derajat setiap instruksi
+	int i = 0;
+	for(; i < 300; i+=5){
+
+		if(blocks.id == id) break;
+
+		// Memutar setiap 5 derajat
+		dyna_set_goal_position(&ax, i);
+
+		// Mulai pembacaan warna
+		blocks = husky_getBlocks();
+	
+	}
+	
+	// Instruksi rotasi sejauh sudut i
+	tx_move_rotasi(i, 0, 0, 30, 100, 20, 1);
+}
+#endif
+#endif
+
+#ifdef HUSKY_ON
+#ifdef DYNA_ON
+void scp_deteksi_arena(uint8_t id){
+	// Set ke Algoritma color detection
+	status = husky_setAlgorithm(ALGORITHM_OBJECT_CLASSIFICATION);
+	
+	// Set Kecepatan Putaran Dynamixel
+	dyna_set_moving_speed(&ax,0x0200,MOVING_CW);
+
+	// Memutar sepanjang 300 derajat -> 5 derajat setiap instruksi
+	int i = 0;
+	for(; i < 300; i+=5){
+
+		if(blocks.id == id) break;
+
+		// Memutar setiap 5 derajat
+		dyna_set_goal_position(&ax, i);
+
+		// Mulai pembacaan warna
+		blocks = husky_getBlocks();
+	
+	}
+	
+	// Instruksi rotasi sejauh sudut i
+	tx_move_rotasi(i, 0, 0, 30, 100, 20, 1);
+}
+#endif
+#endif
+
+
+void scp_mode_jalan(mode_jalan_t mode){
+	tx_move_jalan(0, 15, 0, 5, mode);
 }
 
 //***************************************************************************************************/

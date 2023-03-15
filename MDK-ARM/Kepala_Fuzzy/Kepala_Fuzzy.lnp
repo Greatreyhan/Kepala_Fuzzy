@@ -8,6 +8,8 @@
 "kepala_fuzzy\komunikasi.o"
 "kepala_fuzzy\ping_driver.o"
 "kepala_fuzzy\huskylens_driver.o"
+"kepala_fuzzy\pid.o"
+"kepala_fuzzy\dynamixel.o"
 "kepala_fuzzy\stm32f4xx_hal_i2c.o"
 "kepala_fuzzy\stm32f4xx_hal_i2c_ex.o"
 "kepala_fuzzy\stm32f4xx_hal_rcc.o"

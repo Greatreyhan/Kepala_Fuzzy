@@ -33,9 +33,7 @@ kepala_fuzzy\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_pwr_ex.h
 kepala_fuzzy\main.o: ../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal_uart.h
 kepala_fuzzy\main.o: ..\..\Kepala_Fuzzy\Ping_driver.h
 kepala_fuzzy\main.o: ..\..\Kepala_Fuzzy\DWT_Delay.h
-kepala_fuzzy\main.o: ..\..\Kepala_Fuzzy\Fuzzy.h
-kepala_fuzzy\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
 kepala_fuzzy\main.o: ..\..\Kepala_Fuzzy\Komunikasi.h
-kepala_fuzzy\main.o: ..\..\Kepala_Fuzzy\Huskylens_driver.h
+kepala_fuzzy\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdbool.h
+kepala_fuzzy\main.o: ..\..\Kepala_Fuzzy\pid.h
 kepala_fuzzy\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
-kepala_fuzzy\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\math.h

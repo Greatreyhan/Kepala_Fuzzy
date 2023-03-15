@@ -14,10 +14,10 @@ static I2C_HandleTypeDef* hi2c;
 static uint8_t HUSKY_ADDR = 0;
 
 huskylens_status_t husky_setup(I2C_HandleTypeDef *i2cHandler ){
-	HAL_Delay(50);
+//	HAL_Delay(50);
 	hi2c = i2cHandler;
 	for(int i =0; i<255;i++){
-		if(HAL_I2C_IsDeviceReady(hi2c, i, 1, 10) == HAL_OK){
+		if(HAL_I2C_IsDeviceReady(hi2c, i, 1, 1) == HAL_OK){
 			 HUSKY_ADDR = i;
 		}
 	}

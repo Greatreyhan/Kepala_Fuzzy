@@ -10,6 +10,13 @@
 #include "main.h"
 #include <stdbool.h>
 
+typedef enum{
+	JALAN_TANGGA = 0x01U,
+	JALAN_KELERENG = 0x02U,
+	JALAN_BATU = 0x03U,
+	JALAN_NORMAL = 0x04U
+}mode_jalan_t;
+
 typedef struct{
 	bool ping;
 	bool standby;
@@ -19,6 +26,16 @@ typedef struct{
 	bool req;
 	bool statis;
 }feedback_t;
+
+typedef enum{
+	PING = 0x01U,
+	MOVE_STEADY = 0x02U,
+	MOVE_JALAN = 0x03U,
+	MOVE_TRANSLASI = 0x04U,
+	MOVE_ROTASI = 0x05U,
+	SEND_REQ = 0x06U,
+	GET_STATIS = 0x07U,
+}type_jalan_t;
 
 typedef struct{
 	int16_t pos_x;
@@ -30,15 +47,16 @@ typedef struct{
 	int8_t time;
 	int8_t walkpoint;
 	int8_t mode;
-	int8_t logic;
+	type_jalan_t type;
 	int8_t speed;
+	mode_jalan_t mode_jalan;
 }com_get_t;
 
 void komunikasi_init(UART_HandleTypeDef* uart_handler);
 bool tx_ping(void);
-uint8_t checksum_generator(uint8_t* arr, uint8_t size);
+static uint8_t checksum_generator(uint8_t* arr, uint8_t size);
 bool tx_move_steady(void);
-bool tx_move_jalan(int16_t pos_x, int16_t pos_y, int16_t pos_z, int8_t speed);
+bool tx_move_jalan(int16_t pos_x, int16_t pos_y, int16_t pos_z, int8_t speed, mode_jalan_t mode);
 bool tx_move_translasi(int16_t pos_x, int16_t pos_y, int16_t pos_z, int8_t time, int8_t walkpoint);
 bool tx_move_rotasi(int16_t roll, int16_t pitch, int16_t yaw, int16_t pos_z, int8_t time, int8_t walkpoint, int8_t mode);
 void rx_start(void);

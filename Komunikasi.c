@@ -17,7 +17,7 @@ void komunikasi_init(UART_HandleTypeDef* uart_handler){
 	huart = uart_handler;
 }
 
-uint8_t checksum_generator(uint8_t* arr, uint8_t size){
+static uint8_t checksum_generator(uint8_t* arr, uint8_t size){
 	uint8_t chksm = 0;
 	for(uint8_t i = 0; i < size; i++) chksm += arr[i];
 	return (chksm & 0xFF);
@@ -39,8 +39,8 @@ bool tx_move_steady(void){
 	else return false;
 }
 
-bool tx_move_jalan(int16_t pos_x, int16_t pos_y, int16_t pos_z, int8_t speed){
-	uint8_t jalan[16] = {0xA5, 0x5A, 0x03, ((pos_x >> 8) & 0xFF),(pos_x & 0xFF),((pos_y >> 8) & 0xFF),(pos_y & 0xFF), ((pos_z >> 8) & 0xFF),(pos_z & 0xFF), speed, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00};
+bool tx_move_jalan(int16_t pos_x, int16_t pos_y, int16_t pos_z, int8_t speed, mode_jalan_t mode){
+	uint8_t jalan[16] = {0xA5, 0x5A, 0x03, ((pos_x >> 8) & 0xFF),(pos_x & 0xFF),((pos_y >> 8) & 0xFF),(pos_y & 0xFF), ((pos_z >> 8) & 0xFF),(pos_z & 0xFF), speed, mode, 0x00, 0x00, 0x00, 0x00, 0x00};
 	jalan[15] = checksum_generator(jalan, 16);
 		
 	if(HAL_UART_Transmit(huart, jalan, 16, TIMEOUT) == HAL_OK) return true;
@@ -98,7 +98,7 @@ void rx_get(com_get_t* get){
 			
 			// Check for ping
 			if(rxbuf_get[i+2] == 0x01){
-				get->logic = 0x01;
+				get->type = PING;
 				uint8_t txbuf[3] = {0xA5, 0x5A, 0x01};
 				HAL_UART_Transmit(huart, txbuf, 3, TIMEOUT);
 			}
@@ -107,10 +107,10 @@ void rx_get(com_get_t* get){
 			else if(rxbuf_get[i+2] == 0x02){
 				uint8_t txbuf[3] = {0xA5, 0x5A, 0x02};
 				HAL_UART_Transmit(huart, txbuf, 3, TIMEOUT);
-				get->logic = 0x02;
+				get->type = MOVE_STEADY;
 			}
 			
-			// Check for Jalan
+			// Check for Move Jalan
 			else if(rxbuf_get[i+2] == 0x03){
 				uint8_t txbuf[3] = {0xA5, 0x5A, 0x03};
 				
@@ -130,8 +130,11 @@ void rx_get(com_get_t* get){
 				if(rxbuf_get[i+9] & 0x80) get->speed =  (rxbuf_get[i+9])-(256);
 				else get->speed =  rxbuf_get[i+9];
 				
+				// Get Mode
+				get->mode_jalan = rxbuf_get[i+10];
+				
 				HAL_UART_Transmit(huart, txbuf, 3, TIMEOUT);
-				get->logic = 0x03;
+				get->type = MOVE_JALAN;
 			}
 			
 			// Check for Translasi
@@ -159,7 +162,7 @@ void rx_get(com_get_t* get){
 				else get->walkpoint =  (rxbuf_get[i+10]);
 				
 				HAL_UART_Transmit(huart, txbuf, 3, TIMEOUT);
-				get->logic = 0x04;
+				get->type = MOVE_TRANSLASI;
 			}
 			
 			// Check for Rotasi
@@ -191,14 +194,14 @@ void rx_get(com_get_t* get){
 				
 				uint8_t txbuf[3] = {0xA5, 0x5A, 0x05};
 				HAL_UART_Transmit(huart, txbuf, 3, TIMEOUT);
-				get->logic = 0x05;
+				get->type = MOVE_ROTASI;
 			}
 			
 			// Check for Req
 			else if(rxbuf_get[i+2] == 0x06){
 				uint8_t txbuf[3] = {0xA5, 0x5A, 0x06};
 				HAL_UART_Transmit(huart, txbuf, 3, TIMEOUT);
-				get->logic = 0x06;
+				get->type = SEND_REQ;
 			}
 			
 			// Check for Statis
@@ -218,7 +221,7 @@ void rx_get(com_get_t* get){
 				else get->pos_z = (rxbuf_get[i+7] << 8) | rxbuf_get[i+8];
 				
 				HAL_UART_Transmit(huart, txbuf, 3, TIMEOUT);
-				get->logic = 0x07;
+				get->type = GET_STATIS;
 			}
 			
 		}
