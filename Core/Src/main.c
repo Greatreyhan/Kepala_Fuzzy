@@ -22,8 +22,8 @@
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 //*************************** MODE KALKULASI ********************************//
-//#define USE_FUZZY 				
-#define USE_PID						
+#define USE_FUZZY 				
+//#define USE_PID						
 //#define USE_PID_FUZZY		
 
 //*************************** ON/OFF MODUL ********************************//
@@ -62,6 +62,10 @@
 
 /* Private typedef -----------------------------------------------------------*/
 /* USER CODE BEGIN PTD */
+
+// Filter untuk sensor PING
+//#define FILTER_KAKI
+#define FILTER_AVG
 
 // State untuk deteksi Wall
 #define STATE_KANAN 						0x01
@@ -248,14 +252,14 @@ int main(void)
 	#ifdef PING_ON
 	DWT_Delay_Init();
 	
-	FR.PING_PORT = GPIOA;
-	FR.PING_PIN = GPIO_PIN_0;
-	BR.PING_PORT = GPIOA;
-	BR.PING_PIN = GPIO_PIN_1;
-	FL.PING_PORT =GPIOB;
-	FL.PING_PIN = GPIO_PIN_4;
+	FL.PING_PORT = GPIOA;
+	FL.PING_PIN = GPIO_PIN_0;
 	BL.PING_PORT = GPIOA;
-	BL.PING_PIN = GPIO_PIN_15;
+	BL.PING_PIN = GPIO_PIN_1;
+	FR.PING_PORT =GPIOB;
+	FR.PING_PIN = GPIO_PIN_4;
+	BR.PING_PORT = GPIOA;
+	BR.PING_PIN = GPIO_PIN_15;
 	FF.PING_PORT = GPIOB;
 	FF.PING_PIN = GPIO_PIN_9;
 	BB.PING_PORT = GPIOA;
@@ -272,23 +276,28 @@ int main(void)
 	
 	//*********************** FUZZY CONFIG **************************//
 	#ifdef USE_FUZZY
-	fuzzy_set_membership_input(&input_fuzzy, 15, 20, 25);
-	fuzzy_set_membership_output(&output_fuzzy, 0, 15, 30);
+	fuzzy_set_membership_input(&input_fuzzy, 3, 6, 9);
+	fuzzy_set_membership_output(&output_fuzzy, -10, 0, 10);
 	#endif
 	
 	//*********************** PID CONFIG **************************//
 	#ifdef USE_PID
-	distance_setpoint = 10;
-	PID(&hPID, &distance, &PID_output, &distance_setpoint, 2, 1, 1, PID_PROPOTIONAL_ERROR, PID_CONTROL_DIRECTION_FORWARD);
+	distance_setpoint = 20;
+	PID(&hPID, &distance, &PID_output, &distance_setpoint, 1, 0, 0, PID_PROPOTIONAL_ERROR, PID_CONTROL_DIRECTION_FORWARD);
 	PID_SetMode(&hPID, PID_AUTOMATIC_MODE);
   PID_SetSampleTime(&hPID, 500);
-  PID_SetOutputLimits(&hPID, 0, 30);
+  PID_SetOutputLimits(&hPID, -10, 10);
 	#endif
 	
 	//*********************** COMMUNICATION CONFIG **************************//
 	#ifdef COMMUNICATION_ON
 	komunikasi_init(&huart2);
 	rx_start();
+	tx_move_steady();
+	for(int i=0; i<5; i++) {
+			tx_statis(90,0,-90);
+			HAL_Delay(1000);
+	}
 	#endif
 
   /* USER CODE END 2 */
@@ -297,6 +306,7 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+		
 		scp_wall_follower(STATE_KANAN);
 		
 		//************************* HUSKY DETECTION ***********************//
@@ -502,6 +512,7 @@ void scp_wall_follower(uint8_t state){
 		*/
 		
 		// Mencari Jarak terhadap Wall Kanan / Kiri
+	#ifdef FILTER_KAKI
 		if((FRV >= BRV) && (FRV > PANJANG_PING_KAKI) && (FRV < LEBAR_PEMBACAAN)){
 			kanan = FRV;
 			error_kanan = 0;
@@ -537,19 +548,30 @@ void scp_wall_follower(uint8_t state){
 				scp_belok(BELOK_KIRI);
 			}
 		}
+		#endif
+
+		#ifdef FILTER_AVG
+		if((FLV > 0) && (BLV >0)){
+			kiri = (FLV + BLV)/2;
+		}
+		if((FRV > 0) && (BRV > 0)){
+			kanan = (FRV + BRV)/2;
+		}
+		#endif
+		
 		#ifdef USE_FUZZY
 		//************************* FUZZY CALCULATION *******************//
 		if((state == STATE_KANAN)&&(kanan > 0.0)){
 			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kanan);
 			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
 			res = fuzzy_defuz(&defuz,&fuz_fic_input);
-			tx_move_jalan(res, 15, 0, 5, JALAN_NORMAL);
+			tx_move_jalan(res, 15, 50, 10, JALAN_NORMAL);
 		}
 		else if((state == STATE_KIRI)&&(kiri > 0)){
 			fuzzy_fuzfication_input(&input_fuzzy, &fuz_fic_input, kiri);
 			fuzzy_logic_rule(&output_fuzzy, &fuz_fic_input, &defuz, FUZZY_MIN_TO_MAX);
 			res = fuzzy_defuz(&defuz,&fuz_fic_input);
-			tx_move_jalan(res, 15, 0, 5, JALAN_NORMAL);
+			tx_move_jalan(res, 15, 50, 10, JALAN_NORMAL);
 		}
 		#endif
 		
@@ -566,12 +588,12 @@ void scp_wall_follower(uint8_t state){
 		
 		//************************* SEND MESSAGE ***********************//
 		// Wall follower Kanan -> Nilai > 30
-		if((STATE_KANAN == 1) && PID_output > 0.0) tx_move_jalan(PID_output, 15, 0, 5, JALAN_NORMAL);
+		if((STATE_KANAN == 1)) tx_move_jalan(PID_output, 15, 30, 15, JALAN_NORMAL);
 		
 		// Wall follower Kiri -> Nilai < 30
-		else if((STATE_KIRI == 1) && PID_output > 0.0) tx_move_jalan(PID_output, 15, 0, 5, JALAN_NORMAL);
+		else if((STATE_KIRI == 1)) tx_move_jalan(PID_output, 15, 30, 15, JALAN_NORMAL);
 		
-		else tx_move_jalan(PID_output, 0, 0, 5, JALAN_NORMAL);
+		else tx_move_jalan(PID_output, 0, 30, 15, JALAN_NORMAL);
 		#endif
 		
 }

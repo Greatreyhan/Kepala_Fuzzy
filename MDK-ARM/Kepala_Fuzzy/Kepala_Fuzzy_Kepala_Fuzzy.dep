@@ -1,7 +1,7 @@
 Dependencies for Project 'Kepala_Fuzzy', Target 'Kepala_Fuzzy': (DO NOT MODIFY !)
 CompilerVersion: 5060960::V5.06 update 7 (build 960)::.\ARMCC
 F (startup_stm32f407xx.s)(0x6408932D)(--cpu Cortex-M4.fp.sp --pd "__EVAL SETA 1" -g --apcs=interwork -I.\RTE\_Kepala_Fuzzy-IC:\Users\greatreyhan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\greatreyhan\AppData\Local\Arm\Packs\Keil\STM32F4xx_DFP\2.16.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include--pd "__UVISION_VERSION SETA 535" --pd "_RTE_ SETA 1" --pd "STM32F407xx SETA 1" --pd "_RTE_ SETA 1"--list startup_stm32f407xx.lst --xref -o kepala_fuzzy\startup_stm32f407xx.o --depend kepala_fuzzy\startup_stm32f407xx.d)
-F (../Core/Src/main.c)(0x6411A2E8)(--c99 -c --cpu Cortex-M4.fp.sp -D__EVAL -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ..\..\Kepala_Fuzzy-I.\RTE\_Kepala_Fuzzy-IC:\Users\greatreyhan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\greatreyhan\AppData\Local\Arm\Packs\Keil\STM32F4xx_DFP\2.16.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="535" -D_RTE_ -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o kepala_fuzzy\main.o --omf_browse kepala_fuzzy\main.crf --depend kepala_fuzzy\main.d)
+F (../Core/Src/main.c)(0x6412AAF4)(--c99 -c --cpu Cortex-M4.fp.sp -D__EVAL -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ..\..\Kepala_Fuzzy-I.\RTE\_Kepala_Fuzzy-IC:\Users\greatreyhan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\greatreyhan\AppData\Local\Arm\Packs\Keil\STM32F4xx_DFP\2.16.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="535" -D_RTE_ -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o kepala_fuzzy\main.o --omf_browse kepala_fuzzy\main.crf --depend kepala_fuzzy\main.d)
 I (../Core/Inc/main.h)(0x64089324)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x62DE692D)
 I (../Core/Inc/stm32f4xx_hal_conf.h)(0x64089324)
@@ -37,8 +37,7 @@ I (..\..\Kepala_Fuzzy\Ping_driver.h)(0x63F2BB50)
 I (..\..\Kepala_Fuzzy\DWT_Delay.h)(0x6405FB48)
 I (..\..\Kepala_Fuzzy\Komunikasi.h)(0x6411A12C)
 I (C:\Keil_v5\ARM\ARMCC\include\stdbool.h)(0x6025318C)
-I (..\..\Kepala_Fuzzy\pid.h)(0x63F2BB50)
-I (C:\Keil_v5\ARM\ARMCC\include\string.h)(0x6025318E)
+I (..\..\Kepala_Fuzzy\Fuzzy.h)(0x63DBAC5B)
 F (../Core/Src/stm32f4xx_it.c)(0x64089323)(--c99 -c --cpu Cortex-M4.fp.sp -D__EVAL -g -O3 --apcs=interwork --split_sections -I ../Core/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc -I ../Drivers/STM32F4xx_HAL_Driver/Inc/Legacy -I ../Drivers/CMSIS/Device/ST/STM32F4xx/Include -I ../Drivers/CMSIS/Include -I ..\..\Kepala_Fuzzy-I.\RTE\_Kepala_Fuzzy-IC:\Users\greatreyhan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include-IC:\Users\greatreyhan\AppData\Local\Arm\Packs\Keil\STM32F4xx_DFP\2.16.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include-D__UVISION_VERSION="535" -D_RTE_ -DSTM32F407xx -D_RTE_ -DUSE_HAL_DRIVER -DSTM32F407xx-o kepala_fuzzy\stm32f4xx_it.o --omf_browse kepala_fuzzy\stm32f4xx_it.crf --depend kepala_fuzzy\stm32f4xx_it.d)
 I (../Core/Inc/main.h)(0x64089324)
 I (../Drivers/STM32F4xx_HAL_Driver/Inc/stm32f4xx_hal.h)(0x62DE692D)
