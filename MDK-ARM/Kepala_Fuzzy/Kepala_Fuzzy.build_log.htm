@@ -3,42 +3,50 @@
 <pre>
 <h1>µVision Build Log</h1>
 <h2>Tool Versions:</h2>
-IDE-Version: µVision V5.35.0.0
+IDE-Version: µVision V5.36.0.0
 Copyright (C) 2021 ARM Ltd and ARM Germany GmbH. All rights reserved.
-License Information: aaa greatreyhan, aaaa, LIC=----
+License Information: . ., ., LIC=8MZI6-DAZG5-4ANDE-56VN7-G29WA-6XLDJ
  
 Tool Versions:
-Toolchain:       MDK-Lite  Version: 5.35.0.2
+Toolchain:       MDK-ARM Professional  Version: 5.36.0.0
 Toolchain Path:  C:\Keil_v5\ARM\ARMCC\Bin
 C Compiler:      Armcc.exe V5.06 update 7 (build 960)
 Assembler:       Armasm.exe V5.06 update 7 (build 960)
 Linker/Locator:  ArmLink.exe V5.06 update 7 (build 960)
 Library Manager: ArmAr.exe V5.06 update 7 (build 960)
 Hex Converter:   FromElf.exe V5.06 update 7 (build 960)
-CPU DLL:         SARMCM3.DLL V5.35.0.2
+CPU DLL:         SARMCM3.DLL V5.36.0.0
 Dialog DLL:      DCM.DLL V1.17.3.0
 Target DLL:      STLink\ST-LINKIII-KEIL_SWO.dll V3.0.9.0
 Dialog DLL:      TCM.DLL V1.53.0.0
  
 <h2>Project:</h2>
-D:\STM32\New Academy\Kepala_Fuzzy\MDK-ARM\Kepala_Fuzzy.uvprojx
-Project File Date:  03/15/2023
+E:\STM32\New Academy\Kepala_Fuzzy\MDK-ARM\Kepala_Fuzzy.uvprojx
+Project File Date:  03/26/2023
 
 <h2>Output:</h2>
 *** Using Compiler 'V5.06 update 7 (build 960)', folder: 'C:\Keil_v5\ARM\ARMCC\Bin'
 Build target 'Kepala_Fuzzy'
-compiling main.c...
-..\..\Kepala_Fuzzy\Ping_driver.h(23): warning:  #1-D: last line of file ends without a newline
+compiling Huskylens_driver.c...
+..\Huskylens_driver.h(161): warning:  #1-D: last line of file ends without a newline
   #endif
-..\..\Kepala_Fuzzy\Komunikasi.h(67): warning:  #1-D: last line of file ends without a newline
-  #endif
-..\..\Kepala_Fuzzy\Fuzzy.h(50): warning:  #1-D: last line of file ends without a newline
-  #endif
-../Core/Src/main.c: 3 warnings, 0 errors
+..\Huskylens_driver.c(38): warning:  #111-D: statement is unreachable
+  	return HUSKY_TIMEOUT;
+..\Huskylens_driver.c(215): warning:  #940-D: missing return statement at end of non-void function "husky_getArrowById" 
+  }
+..\Huskylens_driver.c(194): warning:  #550-D: variable "handler"  was set but never used
+  	huskylens_arrow_t handler;
+..\Huskylens_driver.c(230): warning:  #111-D: statement is unreachable
+  	return HUSKY_TIMEOUT;
+..\Huskylens_driver.c(292): warning:  #111-D: statement is unreachable
+  	return ERROR_DETECTION;
+..\Huskylens_driver.c(313): warning:  #940-D: missing return statement at end of non-void function "husky_distance_prediction" 
+  }
+..\Huskylens_driver.c: 7 warnings, 0 errors
 linking...
-Program Size: Code=12530 RO-data=458 RW-data=104 ZI-data=2224  
+Program Size: Code=16510 RO-data=610 RW-data=208 ZI-data=2824  
 FromELF: creating hex file...
-"Kepala_Fuzzy\Kepala_Fuzzy.axf" - 0 Error(s), 3 Warning(s).
+"Kepala_Fuzzy\Kepala_Fuzzy.axf" - 0 Error(s), 7 Warning(s).
 
 <h2>Software Packages used:</h2>
 
@@ -49,20 +57,20 @@ Package Vendor: ARM
    * Component: CORE Version: 5.6.0
 
 Package Vendor: Keil
-                http://www.keil.com/pack/Keil.STM32F4xx_DFP.2.16.0.pack
-                Keil.STM32F4xx_DFP.2.16.0
+                https://www.keil.com/pack/Keil.STM32F4xx_DFP.2.17.0.pack
+                Keil.STM32F4xx_DFP.2.17.0
                 STMicroelectronics STM32F4 Series Device Support, Drivers and Examples
 
 <h2>Collection of Component include folders:</h2>
   .\RTE\_Kepala_Fuzzy
   C:\Users\greatreyhan\AppData\Local\Arm\Packs\ARM\CMSIS\5.9.0\CMSIS\Core\Include
-  C:\Users\greatreyhan\AppData\Local\Arm\Packs\Keil\STM32F4xx_DFP\2.16.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include
+  C:\Users\greatreyhan\AppData\Local\Arm\Packs\Keil\STM32F4xx_DFP\2.17.0\Drivers\CMSIS\Device\ST\STM32F4xx\Include
 
 <h2>Collection of Component Files used:</h2>
 
    * Component: ARM::CMSIS:CORE:5.6.0
       Include file:  CMSIS\Core\Include\tz_context.h
-Build Time Elapsed:  00:00:02
+Build Time Elapsed:  00:00:04
 </pre>
 </body>
 </html>

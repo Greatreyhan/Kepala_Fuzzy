@@ -12,7 +12,7 @@
 
 typedef struct{
 	uint8_t tx_buf[15];
-	uint8_t rx_buf[10];
+	uint8_t rx_buf[20];
 	uint8_t id;
 }dynamixel_t;
 
@@ -53,8 +53,15 @@ static uint8_t checksum_generator(uint8_t* msg, uint8_t len);
 void dyna_set_id(dynamixel_t* dyn, uint8_t new_id);
 void dyna_set_limit_CW(dynamixel_t* dyn, uint16_t angle);
 void dyna_set_limit_CCW(dynamixel_t* dyn, uint16_t angle);
-uint8_t dyna_read_posisition(dynamixel_t* dyn);
+uint16_t dyna_read_posisition(dynamixel_t* dyn);
 
-// Error
+// Competition
+void dyna_endless_turn(dynamixel_t* dyn, uint16_t time, uint16_t speed, dynamixel_direction_t dir);
+void dyna_calibrate(dynamixel_t* dyn);
+void dyna_scan(dynamixel_t* dyn, uint16_t start, uint16_t speed, dynamixel_direction_t dir);
 uint8_t dyna_temperature(dynamixel_t* dyn);
+
+// Testing
+uint8_t dyna_read_posisition_L(dynamixel_t* dyn);
+uint8_t dyna_read_posisition_H(dynamixel_t* dyn);
 #endif

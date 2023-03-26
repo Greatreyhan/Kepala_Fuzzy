@@ -54,9 +54,8 @@ bool tx_move_translasi(int16_t pos_x, int16_t pos_y, int16_t pos_z, int8_t time,
 	if(HAL_UART_Transmit(huart, translasi, 16, TIMEOUT) == HAL_OK) return true;
 	else return false;
 }
-
-bool tx_move_rotasi(int16_t roll, int16_t pitch, int16_t yaw, int16_t pos_z, int8_t time, int8_t walkpoint, int8_t mode){
-	uint8_t rotasi[16] = {0xA5, 0x5A, 0x05, ((roll >> 8) & 0xFF),(roll & 0xFF),((pitch >> 8) & 0xFF),(pitch & 0xFF),((yaw >> 8) & 0xFF),(yaw & 0xFF), ((pos_z >> 8) & 0xFF),(pos_z & 0xFF), time, walkpoint, mode, 0x00, 0x00};
+bool tx_move_rotasi(int16_t roll, int16_t pitch, int16_t yaw, int16_t pos_z, int8_t mode, int8_t speed){
+	uint8_t rotasi[16] = {0xA5, 0x5A, 0x05, ((roll >> 8) & 0xFF),(roll & 0xFF),((pitch >> 8) & 0xFF),(pitch & 0xFF),((yaw >> 8) & 0xFF),(yaw & 0xFF), ((pos_z >> 8) & 0xFF),(pos_z & 0xFF), mode, speed, 0x00, 0x00, 0x00};
 	rotasi[15] = checksum_generator(rotasi, 16);
 		
 	if(HAL_UART_Transmit(huart, rotasi, 16, TIMEOUT) == HAL_OK) return true;
@@ -173,24 +172,24 @@ void rx_get(com_get_t* get){
 				else get->roll = ((rxbuf_get[i+3] << 8) | rxbuf_get[i+4]);
 				
 				// Check negative value
-				if(rxbuf_get[i+5] & 0x80) get->yaw = ((rxbuf_get[i+5] << 8) | rxbuf_get[i+6])-(65536);
-				else get->yaw = ((rxbuf_get[i+5] << 8) | rxbuf_get[i+6]);
+				if(rxbuf_get[i+5] & 0x80) get->pitch = ((rxbuf_get[i+5] << 8) | rxbuf_get[i+6])-(65536);
+				else get->pitch = ((rxbuf_get[i+5] << 8) | rxbuf_get[i+6]);
 				
 				// Check negative value
-				if(rxbuf_get[i+7] & 0x80) get->pitch = ((rxbuf_get[i+7] << 8) | rxbuf_get[i+8])-(65536);
-				else get->pitch = ((rxbuf_get[i+7] << 8) | rxbuf_get[i+8]);
+				if(rxbuf_get[i+7] & 0x80) get->yaw = ((rxbuf_get[i+7] << 8) | rxbuf_get[i+8])-(65536);
+				else get->yaw = ((rxbuf_get[i+7] << 8) | rxbuf_get[i+8]);
 				
 				// Check negative value
 				if(rxbuf_get[i+9] & 0x80) get->pos_z = ((rxbuf_get[i+9] << 8) | rxbuf_get[i+10])-(65536);
 				else get->pos_z = ((rxbuf_get[i+9] << 8) | rxbuf_get[i+10]);
 				
 				// Check negative value
-				if(rxbuf_get[i+11] & 0x80) get->time =  (rxbuf_get[i+11])-(256);
-				else get->time =  rxbuf_get[i+11];
+				if(rxbuf_get[i+11] & 0x80) get->mode =  (rxbuf_get[i+11])-(256);
+				else get->mode =  rxbuf_get[i+11];
 				
 				// Check negative value
-				if(rxbuf_get[i+12] & 0x80) get->walkpoint =  (rxbuf_get[i+12])-(256);
-				else get->walkpoint =  (rxbuf_get[i+12]);
+				if(rxbuf_get[i+12] & 0x80) get->speed =  (rxbuf_get[i+12])-(256);
+				else get->speed =  (rxbuf_get[i+12]);
 				
 				uint8_t txbuf[3] = {0xA5, 0x5A, 0x05};
 				HAL_UART_Transmit(huart, txbuf, 3, TIMEOUT);

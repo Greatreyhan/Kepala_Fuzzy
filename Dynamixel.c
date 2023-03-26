@@ -201,7 +201,20 @@ uint8_t dyna_temperature(dynamixel_t* dyn){
 	memcpy(dyn->rx_buf, rx_buf, 7);
 }
 
-uint8_t dyna_read_posisition(dynamixel_t* dyn){
+
+uint8_t dyna_read_posisition_H(dynamixel_t* dyn){
+	uint8_t pos[8] = {0xFF, 0xFF, dyn->id, 0x04, 0x02, 0X25, 0x01, 0x00};
+	uint8_t chk = checksum_generator(pos, 8);
+	pos[7] = chk;
+	HAL_HalfDuplex_EnableTransmitter(huart);
+	HAL_UART_Transmit(huart, pos, 8, 10);
+	HAL_HalfDuplex_EnableReceiver(huart);
+	HAL_UART_Receive(huart, rx_buf, 8, 10);
+	memcpy(dyn->rx_buf, rx_buf, 8);
+	return rx_buf[5];
+}
+
+uint8_t dyna_read_posisition_L(dynamixel_t* dyn){
 	uint8_t pos[8] = {0xFF, 0xFF, dyn->id, 0x04, 0x02, 0X24, 0x01, 0x00};
 	uint8_t chk = checksum_generator(pos, 8);
 	pos[7] = chk;
@@ -210,7 +223,7 @@ uint8_t dyna_read_posisition(dynamixel_t* dyn){
 	HAL_HalfDuplex_EnableReceiver(huart);
 	HAL_UART_Receive(huart, rx_buf, 8, 10);
 	memcpy(dyn->rx_buf, rx_buf, 8);
-	return rx_buf[2];
+	return rx_buf[5];
 }
 
 static uint8_t checksum_generator(uint8_t* msg, uint8_t len){
@@ -220,3 +233,38 @@ static uint8_t checksum_generator(uint8_t* msg, uint8_t len){
 	} 
 	return ~buf;
 }
+
+// ---------------------------------- START FOR COMPETITION PURPOUSE -------------------------------------
+uint16_t dyna_read_posisition(dynamixel_t* dyn){
+	uint8_t mem_L = dyna_read_posisition_L(dyn);
+	uint8_t mem_H = dyna_read_posisition_H(dyn);
+	return ((mem_H << 8) | mem_L);
+}
+
+void dyna_endless_turn(dynamixel_t* dyn, uint16_t time, uint16_t speed, dynamixel_direction_t dir){
+	dyna_set_torque_enabler(dyn, TORQUE_ON);
+	dyna_set_limit_CW(dyn, 0);
+	dyna_set_limit_CCW(dyn, 0);
+	dyna_set_moving_speed(dyn, speed, dir);
+	HAL_Delay(time);
+	dyna_set_moving_speed(dyn, 0, dir);
+}
+
+void dyna_calibrate(dynamixel_t* dyn){
+	dyna_set_torque_enabler(dyn, TORQUE_ON);
+	dyna_set_limit_CW(dyn, 0);
+	dyna_set_limit_CCW(dyn, 1023);
+	dyna_set_goal_position(dyn, 523);
+}
+
+void dyna_scan(dynamixel_t* dyn, uint16_t start, uint16_t speed, dynamixel_direction_t dir){
+	dyna_set_torque_enabler(dyn, TORQUE_ON);
+	dyna_set_limit_CW(dyn, 0);
+	dyna_set_limit_CCW(dyn, 1023);
+	dyna_set_moving_speed(dyn, 500, dir);
+	dyna_set_goal_position(dyn, start);
+	HAL_Delay(1000);
+	dyna_set_moving_speed(dyn, speed, dir);
+	dyna_set_goal_position(dyn, 1023);
+}
+// ---------------------------------- END FOR COMPETITION PURPOUSE ---------------------------------------

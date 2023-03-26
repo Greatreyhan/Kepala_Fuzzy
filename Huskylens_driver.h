@@ -50,6 +50,7 @@ typedef struct{
 	uint16_t num_block_arr;
 	uint16_t num_id;
 	uint16_t current_frame;
+	uint8_t msg[50];
 }huskylens_info_t;
 
 typedef enum{

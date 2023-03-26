@@ -7,20 +7,20 @@
 
 #include "Huskylens_driver.h"
 
-#define TIME_TRANSMIT 100
-#define TIME_RECEIVE 100
+#define TIME_TRANSMIT 10
+#define TIME_RECEIVE 10
 
 static I2C_HandleTypeDef* hi2c;
-static uint8_t HUSKY_ADDR = 0;
+static uint8_t HUSKY_ADDR = 0x65;
 
-huskylens_status_t husky_setup(I2C_HandleTypeDef *i2cHandler ){
+huskylens_status_t husky_setup(I2C_HandleTypeDef *i2cHandler){
 //	HAL_Delay(50);
 	hi2c = i2cHandler;
-	for(int i =0; i<255;i++){
-		if(HAL_I2C_IsDeviceReady(hi2c, i, 1, 1) == HAL_OK){
-			 HUSKY_ADDR = i;
-		}
-	}
+//	for(int i =0; i<255;i++){
+//		if(HAL_I2C_IsDeviceReady(hi2c, i, 1, 10) == HAL_OK){
+//			 HUSKY_ADDR = i;
+//		}
+//	}
 	uint8_t knock[] = {0x55, 0xAA, 0x11, 0x00, 0x2C, 0x3C};
 	uint8_t rxBuff[6];
 	HAL_I2C_Master_Transmit(hi2c, HUSKY_ADDR, knock, 6, TIME_TRANSMIT);
@@ -82,10 +82,10 @@ huskylens_block_t husky_getBlocks(void){
 	huskylens_block_t handler;
 	uint8_t reqBlock[] = {0x55, 0xAA, 0x11, 0x00, 0x21, 0x31};
 	HAL_I2C_Master_Transmit(hi2c, HUSKY_ADDR, reqBlock, 6, TIME_TRANSMIT);
-	
 	// Return INFO
 	uint8_t rxBuff[50];
   HAL_I2C_Master_Receive(hi2c, HUSKY_ADDR, rxBuff, 50, TIME_RECEIVE);
+	memcpy(handler.info.msg, rxBuff, 50);
 	if( rxBuff[4] == 0x29){
 		handler.info.num_block_arr = (rxBuff[6] << 8) | rxBuff[5];
 		handler.info.num_id = (rxBuff[8] << 8) | rxBuff[7];
@@ -308,9 +308,8 @@ double husky_distance_prediction(void){
 			
 			angle = atan(block.height/block.width);
 			distance = block.height/angle;
-			
+			return distance;
 		}
-	return 0;
 }
 
 // ---------------------------------- END FOR COMPETITION PURPOUSE ---------------------------------------
